@@ -10,13 +10,13 @@ let py = 0;
 let sw = 8;
 
 function preload() {
-  // Initialize HandPose model with flipped video input
-  handPose = ml5.handPose({ flipped: true });
+  // 初始化 HandPose 模型
+  handPose = ml5.handPose(video, modelReady);
 }
 
-function mousePressed() {
-  // Log detected hand data to the console
-  console.log(hands);
+function modelReady() {
+  console.log("HandPose model loaded!");
+  handPose.on("predict", gotHands);
 }
 
 function gotHands(results) {
@@ -26,15 +26,13 @@ function gotHands(results) {
 function setup() {
   createCanvas(640, 480);
   
-  // Create an off-screen graphics buffer for painting
+  // 創建畫布
   painting = createGraphics(640, 480);
   painting.clear();
 
-  video = createCapture(VIDEO, { flipped: true });
+  video = createCapture(VIDEO);
+  video.size(640, 480);
   video.hide();
-  
-  // Start detecting hands
-  handPose.detectStart(video, gotHands);
 }
 
 function draw() {
@@ -43,39 +41,36 @@ function draw() {
   if (hands.length > 0) {
     let rightHand, leftHand;
 
-    // Separate detected hands into left and right
     for (let hand of hands) {
       if (hand.handedness == 'Right') {
-        let index = hand.index_finger_tip;
-        let thumb = hand.thumb_tip;
+        let index = hand.annotations.indexFinger[3];
+        let thumb = hand.annotations.thumb[3];
         rightHand = { index, thumb };
       }
       if (hand.handedness == 'Left') {
-        let index = hand.index_finger_tip;
-        let thumb = hand.thumb_tip;
+        let index = hand.annotations.indexFinger[3];
+        let thumb = hand.annotations.thumb[3];
         leftHand = { index, thumb };
       }
     }
 
-    // Adjust stroke width based on left-hand pinch distance
     if (leftHand) {
       let { index, thumb } = leftHand;
-      let x = (index.x + thumb.x) * 0.5;
-      let y = (index.y + thumb.y) * 0.5;
-      sw = dist(index.x, index.y, thumb.x, thumb.y);
+      let x = (index[0] + thumb[0]) * 0.5;
+      let y = (index[1] + thumb[1]) * 0.5;
+      sw = dist(index[0], index[1], thumb[0], thumb[1]);
 
       fill(255, 0, 255);
       noStroke();
       circle(x, y, sw);
     }
 
-    // Draw with right-hand pinch
     if (rightHand) {
       let { index, thumb } = rightHand;
-      let x = (index.x + thumb.x) * 0.5;
-      let y = (index.y + thumb.y) * 0.5;
+      let x = (index[0] + thumb[0]) * 0.5;
+      let y = (index[1] + thumb[1]) * 0.5;
       
-      let d = dist(index.x, index.y, thumb.x, thumb.y);
+      let d = dist(index[0], index[1], thumb[0], thumb[1]);
       if (d < 20) {
         painting.stroke(255, 255, 0);
         painting.strokeWeight(sw * 0.5);
@@ -87,6 +82,5 @@ function draw() {
     }
   }
 
-  // Overlay painting on top of the video
   image(painting, 0, 0);
 }
