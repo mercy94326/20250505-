@@ -79,8 +79,18 @@ function draw() {
 
       px = x;
       py = y;
+
+      // 新增半透明圓形，跟著右手移動
+      fill(0, 255, 0, 127); // 半透明綠色
+      noStroke();
+      circle(x, y, 50); // 固定大小為 50 的圓形
     }
   }
+
+  // 在畫布中間顯示一個固定的半透明圓形
+  fill(0, 0, 255, 127); // 半透明藍色
+  noStroke();
+  circle(width / 2, height / 2, 100); // 固定大小為 100 的圓形
 
   image(painting, 0, 0);
 }
